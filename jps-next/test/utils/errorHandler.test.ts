@@ -2,45 +2,20 @@ import { handleError, handleServiceError, ErrorCode } from "../../utils/errorHan
 
 describe("ErrorHandler", () => {
   describe("handleError", () => {
-    test("should return correct response for ValidationError", async () => {
-      const response = handleError(ErrorCode.ValidationError);
-      expect(response.status).toBe(400);
+    const cases = [
+      { code: ErrorCode.ValidationError, status: 400, message: "Validation error" },
+      { code: ErrorCode.Unauthorized, status: 401, message: "Unauthorized" },
+      { code: ErrorCode.NotFound, status: 404, message: "Resource not found" },
+      { code: ErrorCode.DuplicateError, status: 409, message: "Duplicate entry" },
+      { code: ErrorCode.UnknownError, status: 500, message: "An unknown error occurred" },
+    ];
+
+    test.each(cases)("エラーコード %p に対してステータスコード %p とメッセージ %p を返す", async ({ code, status, message }) => {
+      const response = handleError(code);
+      expect(response.status).toBe(status);
       expect(response.headers.get("Content-Type")).toBe("application/json");
       const body = await response.text();
-      expect(body).toEqual(JSON.stringify({ error: "Validation error" }));
-    });
-
-    test("should return correct response for Unauthorized", async () => {
-      const response = handleError(ErrorCode.Unauthorized);
-      expect(response.status).toBe(401);
-      expect(response.headers.get("Content-Type")).toBe("application/json");
-      const body = await response.text();
-      expect(body).toEqual(JSON.stringify({ error: "Unauthorized" }));
-    });
-
-
-    test("should return correct response for NotFound", async () => {
-      const response = handleError(ErrorCode.NotFound);
-      expect(response.status).toBe(404);
-      expect(response.headers.get("Content-Type")).toBe("application/json");
-      const body = await response.text();
-      expect(body).toEqual(JSON.stringify({ error: "Resource not found" }));
-    });
-
-    test("should return correct response for DuplicateError", async () => {
-      const response = handleError(ErrorCode.DuplicateError);
-      expect(response.status).toBe(409);
-      expect(response.headers.get("Content-Type")).toBe("application/json");
-      const body = await response.text();
-      expect(body).toEqual(JSON.stringify({ error: "Duplicate entry" }));
-    });
-
-    test("should return correct response for UnknownError", async () => {
-      const response = handleError(ErrorCode.UnknownError);
-      expect(response.status).toBe(500);
-      expect(response.headers.get("Content-Type")).toBe("application/json");
-      const body = await response.text();
-      expect(body).toEqual(JSON.stringify({ error: "An unknown error occurred" }));
+      expect(body).toEqual(JSON.stringify({ error: message }));
     });
   });
 
@@ -65,6 +40,4 @@ describe("ErrorHandler", () => {
       });
     });
   });
-
-
 });

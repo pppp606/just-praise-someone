@@ -6,7 +6,7 @@ export enum ErrorCode {
   Unauthorized = "unauthorized",
 }
 
-type ServiceClassThrowError = {
+export type ServiceClassThrowError = {
   code: ErrorCode;
   message?: string;
 };

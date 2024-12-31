@@ -35,7 +35,6 @@ yarn-error.log*
 # .env.sample は許可
 .env.local
 .env.development
-.env.test
 .env.production
 .env
 

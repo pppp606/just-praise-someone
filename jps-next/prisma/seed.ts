@@ -26,7 +26,7 @@ const skills = [
   { code: 'expression', name: '発信力', sortOrder: 21 },
 ];
 
-async function main() {
+export const seed = async () => {
   console.log('Seeding skills...');
   for (const skill of skills) {
     await prisma.skill.upsert({
@@ -42,11 +42,14 @@ async function main() {
   console.log('Seeding completed!');
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// NOTE: コマンドから直接実行された場合
+if (require.main === module) {
+  seed()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

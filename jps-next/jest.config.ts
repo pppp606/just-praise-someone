@@ -4,14 +4,16 @@ const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.tsx?$': 'ts-jest', // TypeScript ファイルを ts-jest でトランスパイル
+    '^.+\\.tsx?$': 'ts-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'], // ファイル拡張子のサポート
-  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'], // テストファイルのパターン
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1', // 絶対パスのエイリアスをサポート
+    '^@/(.*)$': '<rootDir>/$1',
   },
-  transformIgnorePatterns: ['<rootDir>/node_modules/'], // トランスパイル対象外のディレクトリ
+  transformIgnorePatterns: ['<rootDir>/node_modules/'],
+  globalSetup: "<rootDir>/test/helpers/globalSetup.ts",
+  setupFilesAfterEnv: ["<rootDir>/test/helpers/setupFilesAfter.ts"],
 };
 
 export default config;

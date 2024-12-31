@@ -3,14 +3,11 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// NOTE: データリセットから除外するマスターテーブル
-const excludeTables = ["skill", "user"];
+// NOTE: データリセットから除外するテーブル
+const excludeTables = ["skills", "users"];
 
 beforeEach(async () => {
-  console.log("Resetting database tables...");
-
   const excludeTablesList = excludeTables.map((table) => `'${table}'`).join(", ");
-
   await prisma.$executeRawUnsafe(`
     DO $$
     DECLARE
@@ -26,6 +23,4 @@ beforeEach(async () => {
       END LOOP;
     END $$;
   `);
-
-  console.log("Database tables reset. Seeding...");
 });

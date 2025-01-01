@@ -1,5 +1,5 @@
-import { PrismaClient, Prisma, Praise } from "@prisma/client";
-import { ErrorCode } from "../utils/errorHandler";
+import { PrismaClient, Prisma, Praise } from '@prisma/client';
+import { ErrorCode } from '../utils/errorHandler';
 
 const prisma = new PrismaClient();
 
@@ -25,6 +25,38 @@ type PraiseWithSkills = Prisma.PraiseGetPayload<{
 export class PraiseService {
   static prisma = prisma.praise;
 
+  // 受け取った褒め言葉一覧
+  static async getPraisesByReceivedUserId(receivedUserId: string) {
+    const praises = await this.prisma.findMany({
+      where: { receivedUserId },
+      include: {
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
+
+    return praises ? praises.map(this.formatPraise) : [];
+  }
+
+  // 送った褒め言葉一覧
+  static async getPraisesByGivenUserId(givenUserId: string) {
+    const praises = await this.prisma.findMany({
+      where: { givenUserId },
+      include: {
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
+
+    return praises ? praises.map(this.formatPraise) : [];
+  }
+
   static async createPraise(data: {
     content: string;
     receivedUserId: string;
@@ -40,7 +72,7 @@ export class PraiseService {
 
     if (skills.length !== data.skillCodes.length) {
       throw {
-        code: ErrorCode.NotFound
+        code: ErrorCode.NotFound,
       };
     }
 
@@ -56,7 +88,7 @@ export class PraiseService {
 
     if (existingPraise) {
       throw {
-        code: ErrorCode.DuplicateError
+        code: ErrorCode.DuplicateError,
       };
     }
 
@@ -89,13 +121,13 @@ export class PraiseService {
 
     if (!praise) {
       throw {
-        code: ErrorCode.NotFound
+        code: ErrorCode.NotFound,
       };
     }
 
     if (praise.givenUserId !== givenUserId) {
       throw {
-        code: ErrorCode.Unauthorized
+        code: ErrorCode.Unauthorized,
       };
     }
 
@@ -111,13 +143,13 @@ export class PraiseService {
     const praise = await this.prisma.findUnique({ where: { id } });
     if (!praise) {
       throw {
-        code: ErrorCode.NotFound
+        code: ErrorCode.NotFound,
       };
     }
 
     if (praise.givenUserId !== givenUserId) {
       throw {
-        code: ErrorCode.Unauthorized
+        code: ErrorCode.Unauthorized,
       };
     }
 
@@ -133,9 +165,9 @@ export class PraiseService {
       where: { code: { in: data.skillCodes } },
     });
 
-    if(skills.length !== data.skillCodes.length) {
+    if (skills.length !== data.skillCodes.length) {
       throw {
-        code: ErrorCode.NotFound
+        code: ErrorCode.NotFound,
       };
     }
 
@@ -164,12 +196,22 @@ export class PraiseService {
   }
 
   // NOTE: 受取人 (receivedUserId）　が isApproved のみ更新可能
-  static async updateIsApproved(id: string, receivedUserId: string, isApproved: boolean) {
+  static async updateIsApproved(
+    id: string,
+    receivedUserId: string,
+    isApproved: boolean
+  ) {
     const praise = await this.prisma.findUnique({ where: { id } });
 
-    if (!praise || praise.receivedUserId !== receivedUserId) {
+    if (!praise) {
       throw {
-        code: ErrorCode.NotFound
+        code: ErrorCode.NotFound,
+      };
+    }
+
+    if (praise.receivedUserId !== receivedUserId) {
+      throw {
+        code: ErrorCode.Unauthorized,
       };
     }
 
@@ -179,7 +221,9 @@ export class PraiseService {
     });
   }
 
-  private static formatPraise(praise: PraiseWithSkills): PraiseIncludeSkillCode {
+  private static formatPraise(
+    praise: PraiseWithSkills
+  ): PraiseIncludeSkillCode {
     return {
       id: praise.id,
       content: praise.content,
@@ -193,7 +237,10 @@ export class PraiseService {
   }
 
   private static validateContent(content: string) {
-    if (content.length < MIN_CONTENT_LENGTH || content.length >= MAX_CONTENT_LENGTH) {
+    if (
+      content.length < MIN_CONTENT_LENGTH ||
+      content.length >= MAX_CONTENT_LENGTH
+    ) {
       throw {
         code: ErrorCode.ValidationError,
         message: `褒め言葉は${MIN_CONTENT_LENGTH}文字以上${MAX_CONTENT_LENGTH}文字以下で記入してください。`,
@@ -202,7 +249,10 @@ export class PraiseService {
   }
 
   private static validateSkills(skillCodes: string[]) {
-    if (skillCodes.length < MIN_SKILL_COUNT || skillCodes.length >= MAX_SKILL_COUNT) {
+    if (
+      skillCodes.length < MIN_SKILL_COUNT ||
+      skillCodes.length >= MAX_SKILL_COUNT
+    ) {
       throw {
         code: ErrorCode.ValidationError,
         message: `褒めスキルは${MIN_SKILL_COUNT}つ以上${MAX_SKILL_COUNT}つ以下で指定してください。`,

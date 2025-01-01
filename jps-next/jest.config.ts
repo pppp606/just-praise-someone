@@ -12,8 +12,8 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   transformIgnorePatterns: ['<rootDir>/node_modules/'],
-  globalSetup: "<rootDir>/test/helpers/globalSetup.ts",
-  setupFilesAfterEnv: ["<rootDir>/test/helpers/setupFilesAfter.ts"],
+  globalSetup: '<rootDir>/test/helpers/globalSetup.ts',
+  setupFilesAfterEnv: ['<rootDir>/test/helpers/setupFilesAfter.ts'],
 };
 
 export default config;

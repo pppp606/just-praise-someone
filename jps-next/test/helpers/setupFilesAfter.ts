@@ -1,13 +1,14 @@
-import { PrismaClient } from "@prisma/client";
-
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // NOTE: データリセットから除外するテーブル
-const excludeTables = ["skills", "users"];
+const excludeTables = ['skills', 'users'];
 
 beforeEach(async () => {
-  const excludeTablesList = excludeTables.map((table) => `'${table}'`).join(", ");
+  const excludeTablesList = excludeTables
+    .map((table) => `'${table}'`)
+    .join(', ');
   await prisma.$executeRawUnsafe(`
     DO $$
     DECLARE

@@ -10,7 +10,11 @@ const skills = [
   { code: 'hacking', name: 'ハック', sortOrder: 5 },
   { code: 'speed', name: 'スピード', sortOrder: 6 },
   { code: 'technical_insight', name: '技術的知見', sortOrder: 7 },
-  { code: 'tech_trend_catchup', name: '技術トレンドのキャッチアップ', sortOrder: 8 },
+  {
+    code: 'tech_trend_catchup',
+    name: '技術トレンドのキャッチアップ',
+    sortOrder: 8,
+  },
   { code: 'learning', name: '学習意欲', sortOrder: 9 },
   { code: 'problem_solving', name: '問題解決力', sortOrder: 10 },
   { code: 'design_sense', name: 'デザインセンス（UI/UX）', sortOrder: 11 },
@@ -40,7 +44,7 @@ export const seed = async () => {
     });
   }
   console.log('Seeding completed!');
-}
+};
 
 // NOTE: コマンドから直接実行された場合
 if (require.main === module) {

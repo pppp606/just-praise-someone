@@ -14,7 +14,7 @@ export async function middleware(req: NextRequest) {
   // JWT を取得
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token) {
+  if (!token || !token?.id) {
     // 認証されていない場合は 401 Unauthorized を返す
     return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
@@ -22,7 +22,9 @@ export async function middleware(req: NextRequest) {
     });
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set('user_id', token.id);
+  return response;
 }
 
 export const config = {

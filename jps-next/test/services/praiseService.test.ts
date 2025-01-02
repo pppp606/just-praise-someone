@@ -74,6 +74,38 @@ describe('PraiseService', () => {
     });
   });
 
+  describe('getPraiseById', () => {
+    test('存在しない褒め言葉を取得しようとした場合、NotFoundErrorを返す', async () => {
+      const praiseId = 'invalid_praise_id';
+      await expect(PraiseService.getPraiseById(praiseId)).rejects.toEqual({
+        code: 'notFound',
+      });
+    });
+
+    test('褒め言葉が存在する場合、褒め言葉を返す', async () => {
+      const prisma = new PrismaClient();
+      const skill = await prisma.skill.findFirst({
+        where: { code: 'code_quality' },
+      });
+      if (!skill) {
+        throw new Error('Skill not found');
+      }
+      const createdPraise = await prisma.praise.create({
+        data: {
+          content: 'a'.repeat(MIN_CONTENT_LENGTH),
+          receivedUserId: 'test_user_1',
+          skills: {
+            create: [{ skillId: skill.id }],
+          },
+          givenUserId: 'test_user_2',
+        },
+      });
+
+      const praise = await PraiseService.getPraiseById(createdPraise.id);
+      expect(praise.id).toBe(createdPraise.id);
+    });
+  });
+
   describe('createPraise', () => {
     test('褒め言葉がMIN_CONTENT_LENGTH未満の場合、ValidationErrorを返す', async () => {
       const data = {
@@ -209,7 +241,7 @@ describe('PraiseService', () => {
       });
     });
 
-    test('投稿者以外が褒め言葉を削除しようとした場合、UnauthorizedErrorを返す', async () => {
+    test('投稿者以外が褒め言葉を削除しようとした場合、NotFoundErrorを返す', async () => {
       const prisma = new PrismaClient();
       const skill = await prisma.skill.findFirst({
         where: { code: 'code_quality' },
@@ -231,7 +263,7 @@ describe('PraiseService', () => {
       await expect(
         PraiseService.deletePraise(createdPraise.id, 'test_user_1')
       ).rejects.toEqual({
-        code: 'unauthorized',
+        code: 'notFound',
       });
 
       const praise = await prisma.praise.findUnique({

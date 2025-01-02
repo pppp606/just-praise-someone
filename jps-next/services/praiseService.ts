@@ -57,6 +57,27 @@ export class PraiseService {
     return praises ? praises.map(this.formatPraise) : [];
   }
 
+  static async getPraiseById(id: string) {
+    const praise = await this.prisma.findUnique({
+      where: { id },
+      include: {
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
+
+    if (!praise) {
+      throw {
+        code: ErrorCode.NotFound,
+      };
+    }
+
+    return this.formatPraise(praise);
+  }
+
   static async createPraise(data: {
     content: string;
     receivedUserId: string;
@@ -117,17 +138,11 @@ export class PraiseService {
 
   // NOTE:投稿者 (givenUserId）　のみ削除可能
   static async deletePraise(id: string, givenUserId: string) {
-    const praise = await this.prisma.findUnique({ where: { id } });
+    const praise = await this.prisma.findUnique({ where: { id, givenUserId } });
 
     if (!praise) {
       throw {
         code: ErrorCode.NotFound,
-      };
-    }
-
-    if (praise.givenUserId !== givenUserId) {
-      throw {
-        code: ErrorCode.Unauthorized,
       };
     }
 

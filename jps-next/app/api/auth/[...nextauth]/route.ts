@@ -5,6 +5,12 @@ import GitHubProvider from 'next-auth/providers/github';
 
 const prisma = new PrismaClient();
 
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?: string;
+  }
+}
+
 const handler = NextAuth({
   debug: true,
   adapter: PrismaAdapter(prisma),
@@ -19,6 +25,21 @@ const handler = NextAuth({
       },
     }),
   ],
+  // NOTE: JWT トークンをカスタマイズしてuser.idを追加
+  callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (token?.id) {
+        session.user.id = token.id;
+      }
+      return session;
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
 });
 

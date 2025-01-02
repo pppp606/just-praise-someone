@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+
 export enum ErrorCode {
   NotFound = 'notFound',
   ValidationError = 'validationError',
@@ -12,10 +14,7 @@ export type ServiceClassThrowError = {
 };
 
 const jsonErrResponse = (message: string, status: number): Response => {
-  return new Response(JSON.stringify({ error: message }), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return NextResponse.json({ error: message }, { status });
 };
 
 export const handleServiceError = (error: unknown): Response => {

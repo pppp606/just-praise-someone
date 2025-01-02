@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // NOTE: データリセットから除外するテーブル
-const excludeTables = ['skills', 'users'];
+const excludeTables = ['skills', 'users', 'accounts', 'sessions'];
 
 beforeEach(async () => {
   const excludeTablesList = excludeTables

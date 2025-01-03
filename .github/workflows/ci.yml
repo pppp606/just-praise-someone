@@ -30,7 +30,7 @@ jobs:
           node-version: 20.x
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --prefix jps-next
 
       - name: Wait for DB to be ready
         run: |
@@ -40,7 +40,7 @@ jobs:
           done
 
       - name: Load environment variables
-        run: npx dotenv -e .env.test -- echo "Loaded environment variables"
+        run: npx dotenv -e jps-next/.env.test -- echo "Loaded environment variables"
 
       - name: Run tests
-        run: npm test
+        run: npm test --prefix jps-next

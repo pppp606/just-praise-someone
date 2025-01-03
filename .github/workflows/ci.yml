@@ -30,10 +30,13 @@ jobs:
           node-version: 20.x
 
       - name: Install dependencies
-        run: npm ci --prefix jps-next
+        run: npm ci
+        working-directory: jps-next
 
       - name: Load environment variables
-        run: npx dotenv -e .env.test --prefix jps-next -- echo "Loaded environment variables"
+        run: npx dotenv -e .env.test -- echo "Loaded environment variables"
+        working-directory: jps-next
 
       - name: Run tests
-        run: npm test --prefix jps-next
+        run: npm test
+        working-directory: jps-next

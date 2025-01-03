@@ -155,16 +155,10 @@ export class PraiseService {
     givenUserId: string,
     data: { content: string; skillCodes: string[] }
   ) {
-    const praise = await this.prisma.findUnique({ where: { id } });
+    const praise = await this.prisma.findUnique({ where: { id, givenUserId } });
     if (!praise) {
       throw {
         code: ErrorCode.NotFound,
-      };
-    }
-
-    if (praise.givenUserId !== givenUserId) {
-      throw {
-        code: ErrorCode.Unauthorized,
       };
     }
 
@@ -216,24 +210,28 @@ export class PraiseService {
     receivedUserId: string,
     isApproved: boolean
   ) {
-    const praise = await this.prisma.findUnique({ where: { id } });
-
+    const praise = await this.prisma.findUnique({
+      where: { id, receivedUserId },
+    });
     if (!praise) {
       throw {
         code: ErrorCode.NotFound,
       };
     }
 
-    if (praise.receivedUserId !== receivedUserId) {
-      throw {
-        code: ErrorCode.Unauthorized,
-      };
-    }
-
-    return this.prisma.update({
+    const update = await this.prisma.update({
       where: { id },
       data: { isApproved },
+      include: {
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
     });
+
+    return this.formatPraise(update);
   }
 
   private static formatPraise(

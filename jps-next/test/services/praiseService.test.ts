@@ -318,7 +318,7 @@ describe('PraiseService', () => {
       });
     });
 
-    test('投稿者以外が褒め言葉を更新しようとした場合、UnauthorizedErrorを返す', async () => {
+    test('投稿者以外が褒め言葉を更新しようとした場合、NotFoundErrorを返す', async () => {
       const prisma = new PrismaClient();
       const skill = await prisma.skill.findFirst({
         where: { code: 'code_quality' },
@@ -343,7 +343,7 @@ describe('PraiseService', () => {
           skillCodes: ['code_quality'],
         })
       ).rejects.toEqual({
-        code: 'unauthorized',
+        code: 'notFound',
       });
 
       const praise = await prisma.praise.findUnique({
@@ -497,7 +497,7 @@ describe('PraiseService', () => {
       });
     });
 
-    test('受取人以外がisApprovedを更新しようとした場合、UnauthorizedErrorを返す', async () => {
+    test('受取人以外がisApprovedを更新しようとした場合、NotFoundErrorを返す', async () => {
       const prisma = new PrismaClient();
       const skill = await prisma.skill.findFirst({
         where: { code: 'code_quality' },
@@ -519,7 +519,7 @@ describe('PraiseService', () => {
       await expect(
         PraiseService.updateIsApproved(createdPraise.id, 'test_user_2', true)
       ).rejects.toEqual({
-        code: 'unauthorized',
+        code: 'notFound',
       });
 
       const praise = await prisma.praise.findUnique({

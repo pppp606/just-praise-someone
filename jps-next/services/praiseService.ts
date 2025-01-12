@@ -7,6 +7,7 @@ export const MIN_SKILL_COUNT = 1;
 export const MAX_SKILL_COUNT = 3;
 export const MIN_CONTENT_LENGTH = 10;
 export const MAX_CONTENT_LENGTH = 127;
+export const PAGE_SIZE = 10;
 
 export interface PraiseIncludeSkillCode extends Praise {
   skillCodes: string[];
@@ -26,35 +27,73 @@ export class PraiseService {
   static prisma = prisma.praise;
 
   // 受け取った褒め言葉一覧
-  static async getPraisesByReceivedUserId(receivedUserId: string) {
-    const praises = await this.prisma.findMany({
-      where: { receivedUserId },
-      include: {
-        skills: {
-          include: {
-            skill: true,
+  static async getPraisesByReceivedUserId(
+    receivedUserId: string,
+    page?: number | undefined
+  ) {
+    const [praises, count] = await Promise.all([
+      this.prisma.findMany({
+        where: { receivedUserId },
+        include: {
+          skills: {
+            include: {
+              skill: true,
+            },
           },
         },
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: page ? (page - 1) * PAGE_SIZE : undefined,
+        take: PAGE_SIZE,
+      }),
+      this.prisma.count({
+        where: { receivedUserId },
+      }),
+    ]);
 
-    return praises ? praises.map(this.formatPraise) : [];
+    const totalPages = Math.ceil(count / PAGE_SIZE);
+
+    return {
+      items: praises ? praises.map(this.formatPraise) : [],
+      count,
+      totalPages,
+    };
   }
 
   // 送った褒め言葉一覧
-  static async getPraisesByGivenUserId(givenUserId: string) {
-    const praises = await this.prisma.findMany({
-      where: { givenUserId },
-      include: {
-        skills: {
-          include: {
-            skill: true,
+  static async getPraisesByGivenUserId(
+    givenUserId: string,
+    page?: number | undefined
+  ) {
+    const [praises, count] = await Promise.all([
+      await this.prisma.findMany({
+        where: { givenUserId },
+        include: {
+          skills: {
+            include: {
+              skill: true,
+            },
           },
         },
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: page ? (page - 1) * PAGE_SIZE : undefined,
+        take: PAGE_SIZE,
+      }),
+      this.prisma.count({
+        where: { givenUserId },
+      }),
+    ]);
 
-    return praises ? praises.map(this.formatPraise) : [];
+    const totalPages = Math.ceil(count / PAGE_SIZE);
+
+    return {
+      items: praises ? praises.map(this.formatPraise) : [],
+      count,
+      totalPages,
+    };
   }
 
   static async getPraiseById(id: string) {

@@ -3,6 +3,7 @@ import {
   PraiseService,
   MIN_CONTENT_LENGTH,
   MAX_CONTENT_LENGTH,
+  PAGE_SIZE,
 } from '../../services/praiseService';
 
 describe('PraiseService', () => {
@@ -10,7 +11,9 @@ describe('PraiseService', () => {
     test('受け取った褒め言葉が存在しない場合、空の配列を返す', async () => {
       const praises =
         await PraiseService.getPraisesByReceivedUserId('test_user_1');
-      expect(praises).toEqual([]);
+      expect(praises.items).toEqual([]);
+      expect(praises.totalPages).toBe(0);
+      expect(praises.count).toBe(0);
     });
 
     test('受け取った褒め言葉が存在する場合、褒め言葉一覧を返す', async () => {
@@ -35,8 +38,58 @@ describe('PraiseService', () => {
 
       const praises =
         await PraiseService.getPraisesByReceivedUserId('test_user_1');
-      expect(praises).toHaveLength(1);
-      expect(praises[0].receivedUserId).toBe('test_user_1');
+      expect(praises.items).toHaveLength(1);
+      expect(praises.items[0].receivedUserId).toBe('test_user_1');
+    });
+
+    test('ページを指定した場合、指定したページの褒め言葉一覧を返す', async () => {
+      const prisma = new PrismaClient();
+      const skill = await prisma.skill.findFirst({
+        where: { code: 'code_quality' },
+      });
+      if (!skill) {
+        throw new Error('Skill not found');
+      }
+
+      for (let i = 0; i < 11; i++) {
+        const user = await prisma.user.create({
+          data: {
+            name: `user_g_${i}`,
+            email: `test_g_${i}@example.com`,
+          },
+        });
+
+        await prisma.praise.create({
+          data: {
+            content: `${i} test content`,
+            receivedUserId: 'test_user_1',
+            skills: {
+              create: [{ skillId: skill.id }],
+            },
+            givenUserId: user.id,
+          },
+        });
+      }
+
+      const firstPagePraises = await PraiseService.getPraisesByReceivedUserId(
+        'test_user_1',
+        1
+      );
+
+      expect(firstPagePraises.items).toHaveLength(PAGE_SIZE);
+      expect(firstPagePraises.totalPages).toBe(2);
+      expect(firstPagePraises.count).toBe(11);
+
+      const secondPagePraises = await PraiseService.getPraisesByReceivedUserId(
+        'test_user_1',
+        2
+      );
+      expect(secondPagePraises.items).toHaveLength(1);
+      expect(secondPagePraises.totalPages).toBe(2);
+      expect(secondPagePraises.count).toBe(11);
+
+      expect(firstPagePraises.items[0].content).toBe('10 test content');
+      expect(secondPagePraises.items[0].content).toBe('0 test content');
     });
   });
 
@@ -44,7 +97,9 @@ describe('PraiseService', () => {
     test('送った褒め言葉が存在しない場合、空の配列を返す', async () => {
       const praises =
         await PraiseService.getPraisesByGivenUserId('test_user_1');
-      expect(praises).toEqual([]);
+      expect(praises.items).toEqual([]);
+      expect(praises.totalPages).toBe(0);
+      expect(praises.count).toBe(0);
     });
 
     test('送った褒め言葉が存在する場合、褒め言葉一覧を返す', async () => {
@@ -69,8 +124,57 @@ describe('PraiseService', () => {
 
       const praises =
         await PraiseService.getPraisesByGivenUserId('test_user_2');
-      expect(praises).toHaveLength(1);
-      expect(praises[0].givenUserId).toBe('test_user_2');
+      expect(praises.items).toHaveLength(1);
+      expect(praises.items[0].givenUserId).toBe('test_user_2');
+    });
+
+    test('ページを指定した場合、指定したページの褒め言葉一覧を返す', async () => {
+      const prisma = new PrismaClient();
+      const skill = await prisma.skill.findFirst({
+        where: { code: 'code_quality' },
+      });
+      if (!skill) {
+        throw new Error('Skill not found');
+      }
+
+      for (let i = 0; i < 11; i++) {
+        const user = await prisma.user.create({
+          data: {
+            name: `user_r_${i}`,
+            email: `test_r_${i}@example.com`,
+          },
+        });
+
+        await prisma.praise.create({
+          data: {
+            content: `${i} test content`,
+            receivedUserId: user.id,
+            skills: {
+              create: [{ skillId: skill.id }],
+            },
+            givenUserId: 'test_user_2',
+          },
+        });
+      }
+
+      const firstPagePraises = await PraiseService.getPraisesByGivenUserId(
+        'test_user_2',
+        1
+      );
+      expect(firstPagePraises.items).toHaveLength(PAGE_SIZE);
+      expect(firstPagePraises.totalPages).toBe(2);
+      expect(firstPagePraises.count).toBe(11);
+
+      const secondPagePraises = await PraiseService.getPraisesByGivenUserId(
+        'test_user_2',
+        2
+      );
+      expect(secondPagePraises.items).toHaveLength(1);
+      expect(secondPagePraises.totalPages).toBe(2);
+      expect(secondPagePraises.count).toBe(11);
+
+      expect(firstPagePraises.items[0].content).toBe('10 test content');
+      expect(secondPagePraises.items[0].content).toBe('0 test content');
     });
   });
 

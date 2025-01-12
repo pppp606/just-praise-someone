@@ -6,22 +6,24 @@ import {
 } from '../../../utils/errorHandler';
 import type { NextRequest } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  const userId = req.headers.get('user-id');
-  if (!userId) {
-    return handleError(ErrorCode.NotFound);
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+
+  const userId = searchParams.get('userId');
+  const type = (searchParams.get('type') as 'received' | 'given') || 'received';
+  const page = Number(searchParams.get('page')) || 1;
+
+  if (!userId || !type) {
+    return handleError(ErrorCode.ValidationError);
   }
 
   try {
-    const data = await req.json();
-    const newPraise = await PraiseService.createPraise({
-      ...data,
-      givenUserId: userId,
-    });
-
-    return new Response(JSON.stringify(newPraise), { status: 201 });
+    const praises =
+      type === 'received'
+        ? await PraiseService.getPraisesByReceivedUserId(userId, page || 1)
+        : await PraiseService.getPraisesByGivenUserId(userId, page || 1);
+    return new Response(JSON.stringify(praises), { status: 200 });
   } catch (error) {
-    console.log(error);
     return handleServiceError(error);
   }
 }

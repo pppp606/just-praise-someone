@@ -1,12 +1,21 @@
 import { execSync } from 'child_process';
 import { PrismaClient } from '@prisma/client';
 import { seed } from '../../prisma/seed';
+import * as dotenv from 'dotenv';
 
 const prisma = new PrismaClient();
 
 module.exports = async () => {
+  dotenv.config({ path: '.env.test', override: true });
+
   console.log('Global setup: Creating database...');
-  execSync('npx prisma db push --force-reset', { stdio: 'inherit' });
+  execSync('npx prisma db push --force-reset', {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      DATABASE_URL: process.env.DATABASE_URL,
+    },
+  });
 
   await seed();
   await prisma.user.createMany({

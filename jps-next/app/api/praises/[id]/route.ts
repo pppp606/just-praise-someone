@@ -11,6 +11,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
+
   if (!id) {
     return handleError(ErrorCode.NotFound);
   }
@@ -42,7 +43,6 @@ export async function PUT(
     const updatedPraise = await PraiseService.updatePraise(id, userId, data);
     return NextResponse.json(updatedPraise, { status: 200 });
   } catch (error) {
-    console.log(error);
     return handleServiceError(error);
   }
 }
@@ -70,7 +70,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.log(error);
     return handleServiceError(error);
   }
 }
@@ -102,7 +101,6 @@ export async function PATCH(
     );
     return NextResponse.json(updatedPraise, { status: 200 });
   } catch (error) {
-    console.log(error);
     return handleServiceError(error);
   }
 }

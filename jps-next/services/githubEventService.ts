@@ -93,7 +93,7 @@ export class GithubEventService {
       company: user.data.company, // 所属会社
       location: user.data.location,
       bio: user.data.bio, // 自己紹介
-      // twitter_username: user.data.twitter_username, // Twitterユーザー名
+      twitter_username: user.data.twitter_username, // Twitterユーザー名
       public_repos: user.data.public_repos, // 公開リポジトリ数
       followers: user.data.followers, // フォロワー数
       following: user.data.following, // フォロー数

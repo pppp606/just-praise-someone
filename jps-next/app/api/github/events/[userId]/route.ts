@@ -10,7 +10,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { userId: string } }
 ) {
-  const { userId } = params;
+  const userId = params?.userId;
 
   if (!userId) {
     return handleError(ErrorCode.NotFound);

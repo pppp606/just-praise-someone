@@ -8,9 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const id = (await params).id;
 
   if (!id) {
     return handleError(ErrorCode.NotFound);
@@ -26,9 +26,9 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const id = (await params).id;
   if (!id) {
     return handleError(ErrorCode.NotFound);
   }
@@ -49,9 +49,9 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const id = (await params).id;
   if (!id) {
     return handleError(ErrorCode.NotFound);
   }
@@ -76,9 +76,9 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const id = (await params).id;
   if (!id) {
     return handleError(ErrorCode.NotFound);
   }

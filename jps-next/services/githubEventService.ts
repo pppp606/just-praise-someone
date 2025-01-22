@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 export class GithubEventService {
-  static async getUserPublicEvents(userId: string) {
+  static async getUserPublicEvents(userId: string, prePage: number = 30) {
     const token = process.env.GITHUB_ACCESS_TOKEN;
-    const prePage = 50;
 
     const responses = await Promise.all(
       [1].map((page) =>

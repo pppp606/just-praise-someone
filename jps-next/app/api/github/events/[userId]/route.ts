@@ -17,7 +17,7 @@ export async function GET(
   }
 
   try {
-    const praise = await GithubEventService.getUserPublicEvents(userId);
+    const praise = await GithubEventService.getUserPublicEvents(userId, 60);
     return NextResponse.json(praise, { status: 200 });
   } catch (error) {
     return handleServiceError(error);

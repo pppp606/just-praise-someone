@@ -1,4 +1,4 @@
-import { Skill } from '@prisma/client';
+import { Prisma, Skill } from '@prisma/client';
 import { PraiseIncludeSkillCode } from '../services/praiseService';
 
 export type PraisesResponse = {
@@ -10,3 +10,9 @@ export type PraisesResponse = {
 export type SkillsResponse = {
   items: Skill[];
 };
+
+export type UserResponse = Prisma.UserGetPayload<{
+  include: {
+    profile: true;
+  };
+}>;

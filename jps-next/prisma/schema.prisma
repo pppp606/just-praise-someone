@@ -35,7 +35,7 @@ model UserProfile {
   id         String   @id @default(uuid())
   userId     String   @unique               // User モデルとの 1:1 リレーション
   bio        String?                        // GitHub プロフィールの説明文
-  sns_links  Json?                          // 外部SNSリンクをJSON形式で保存
+  snsLinks   Json?                          // 外部SNSリンクをJSON形式で保存
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

@@ -15,6 +15,7 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
+  loginId       String   @unique               // GitHubのID
   name          String                         // 名前 (GitHub プロフィール名を使用)
   email     　　 String   @unique               // GitHub のメールアドレス
   emailVerified DateTime?

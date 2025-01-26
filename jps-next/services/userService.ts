@@ -1,20 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { PutUserWithProfileRequest } from '../types/request';
-
-export type GithubUser = {
-  id: string;
-  name: string;
-  email: string;
-  image?: string;
-};
-
-export type GithubProfile = {
-  login: string;
-  avatar_url: string;
-  bio: string;
-  twitter_username: string;
-};
+import { GithubProfile } from 'next-auth/providers/github';
 
 export const CustomPrismaAdapter = (prisma: PrismaClient) => {
   const adapter = PrismaAdapter(prisma);
@@ -105,9 +92,9 @@ export class UserService {
         data: {
           name: user.name,
           profile: {
-            upsert: {
-              create: { bio: profile.bio, snsLinks: profile.snsLinks },
-              update: { bio: profile.bio, snsLinks: profile.snsLinks },
+            update: {
+              bio: profile.bio,
+              snsLinks: profile.snsLinks,
             },
           },
         },

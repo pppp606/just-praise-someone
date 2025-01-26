@@ -1,5 +1,39 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { PutUserWithProfileRequest } from '../types/request';
+
+export type GithubUser = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+};
+
+export type GithubProfile = {
+  login: string;
+  avatar_url: string;
+  bio: string;
+  twitter_username: string;
+};
+
+export const CustomPrismaAdapter = (prisma: PrismaClient) => {
+  const adapter = PrismaAdapter(prisma);
+
+  return {
+    ...adapter,
+    async createUser(user: any) {
+      const prisma = new PrismaClient();
+      const createdUser = await prisma.user.create({
+        data: {
+          email: user.email,
+          name: user.name,
+        },
+      });
+
+      return createdUser;
+    },
+  };
+};
 
 export class UserService {
   // 自分以外のユーザー情報から除外する項目
@@ -82,5 +116,26 @@ export class UserService {
     });
 
     return updatedUser;
+  }
+
+  // 初回ログイン時にユーザー情報を更新
+  static async registerGithubUserProfile(
+    providerAccountId: string,
+    profile: GithubProfile
+  ) {
+    const prisma = new PrismaClient();
+    await prisma.userProfile.create({
+      data: {
+        providerAccountId: providerAccountId,
+        providerUserId: profile.login,
+        bio: profile?.bio || '',
+        image: profile.avatar_url,
+        snsLinks: profile?.twitter_username
+          ? {
+              x: profile.twitter_username,
+            }
+          : {},
+      },
+    });
   }
 }

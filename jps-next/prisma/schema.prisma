@@ -14,33 +14,36 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  loginId       String   @unique               // GitHubのID
-  name          String                         // 名前 (GitHub プロフィール名を使用)
-  email     　　 String   @unique               // GitHub のメールアドレス
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(uuid())
+  login           String?  @unique
+  name            String                             // 名前 (GitHub プロフィール名を使用)
+  email           String   @unique                   // GitHub のメールアドレス
+  emailVerified   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  profile   UserProfile?  @relation
-  accounts      Account[]
-  sessions      Session[]
-  givenPraises     Praise[]    @relation("UserGivenPraises") // 自分が送った褒め
-  receivedPraises  Praise[]    @relation("UserReceivedPraises") // 自分が受け取った褒め
+  userProfileId   String?  @unique                    // UserProfile の ID
+
+  profile         UserProfile?  @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  accounts        Account[]
+  sessions        Session[]
+  givenPraises    Praise[]    @relation("UserGivenPraises") // 自分が送った褒め
+  receivedPraises Praise[]  @relation("UserReceivedPraises") // 自分が受け取った褒め
 
   @@map("users")
 }
 
 model UserProfile {
-  id         String   @id @default(uuid())
-  userId     String   @unique               // User モデルとの 1:1 リレーション
-  bio        String?                        // GitHub プロフィールの説明文
-  snsLinks   Json?                          // 外部SNSリンクをJSON形式で保存
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  providerAccountId  String
+  providerUserId     String
+  image              String?
+  bio                String?                        // GitHub プロフィールの説明文
+  snsLinks           Json?                          // 外部SNSリンクをJSON形式で保存
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User?     @relation            // User モデルとの 1:1 リレーション
 
   @@map("user_profiles")
 }

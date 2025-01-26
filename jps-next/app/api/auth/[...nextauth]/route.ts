@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import NextAuth from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
+import {
+  CustomPrismaAdapter,
+  UserService,
+  GithubProfile,
+} from '../../../../services/userService';
 
 const prisma = new PrismaClient();
 
@@ -13,7 +17,7 @@ declare module 'next-auth/jwt' {
 
 const handler = NextAuth({
   debug: true,
-  adapter: PrismaAdapter(prisma),
+  adapter: CustomPrismaAdapter(prisma),
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -25,7 +29,6 @@ const handler = NextAuth({
       },
     }),
   ],
-  // NOTE: JWT トークンをカスタマイズしてuser.idを追加
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
@@ -39,8 +42,42 @@ const handler = NextAuth({
       }
       return session;
     },
+    async signIn({ user, account, profile, email, credentials }) {
+      const existingUserProfile = await prisma.userProfile.findFirst({
+        where: { providerAccountId: account?.providerAccountId },
+      });
+
+      if (!existingUserProfile && account) {
+        await UserService.registerGithubUserProfile(
+          account.providerAccountId,
+          profile as GithubProfile
+        );
+      }
+
+      return true;
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  events: {
+    async linkAccount(message) {
+      const userProfile = await prisma.userProfile.findFirst({
+        where: { providerAccountId: message.account.providerAccountId },
+      });
+      if (!userProfile) {
+        return;
+      }
+
+      await prisma.user.update({
+        where: { id: message.user.id },
+        data: {
+          login: userProfile.providerUserId,
+          profile: {
+            connect: { id: userProfile.id },
+          },
+        },
+      });
+    },
+  },
 });
 
 export { handler as GET, handler as POST };

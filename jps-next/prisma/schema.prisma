@@ -29,6 +29,7 @@ model User {
   sessions        Session[]
   givenPraises    Praise[]    @relation("UserGivenPraises") // 自分が送った褒め
   receivedPraises Praise[]  @relation("UserReceivedPraises") // 自分が受け取った褒め
+  llmBatchJobs    LlmBatchJob[]
 
   @@map("users")
 }
@@ -127,4 +128,39 @@ model PraiseSkill {
 
   @@unique([praiseId, skillId])
   @@map("praise_skills")
+}
+
+enum Provider {
+  openai @map("OPENAI")
+  anthropic @map("ANTHROPIC")
+  google @map("GOOGLE")
+}
+
+enum JobStatus {
+  pending @map("PENDING")
+  processing @map("PROCESSING")
+  completed @map("COMPLETED")
+  failed @map("FAILED")
+}
+
+enum JobType {
+  praise @map("PRAISE")
+}
+
+model LlmBatchJob {
+  id          String    @id @default(uuid())
+  userId      String    @db.VarChar(255)
+  provider    Provider  // LLM APIプロバイダー
+  jobId       String    @unique
+  jobType     JobType   // バッチジョブの種類
+  metadata    Json?
+  status      JobStatus @default(pending)
+  response    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("llm_batch_jobs")
+  @@unique([provider, jobId])
 }

@@ -149,7 +149,7 @@ enum JobType {
 
 model LlmBatchJob {
   id          String    @id @default(uuid())
-  userId      String    @db.VarChar(255)
+  userId      String
   provider    Provider  // LLM APIプロバイダー
   jobId       String    @unique
   jobType     JobType   // バッチジョブの種類

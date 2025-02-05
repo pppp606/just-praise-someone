@@ -1,4 +1,5 @@
 import { PraiseService } from '../../../../services/praiseService';
+import { getAuthenticatedUserId } from '../../../../utils/auth';
 import {
   ErrorCode,
   handleError,
@@ -33,7 +34,7 @@ export async function PUT(
     return handleError(ErrorCode.NotFound);
   }
 
-  const userId = req.headers.get('user_id');
+  const userId = await getAuthenticatedUserId(req);
   if (!userId) {
     return handleError(ErrorCode.NotFound);
   }
@@ -56,7 +57,7 @@ export async function DELETE(
     return handleError(ErrorCode.NotFound);
   }
 
-  const userId = req.headers.get('user_id');
+  const userId = await getAuthenticatedUserId(req);
   if (!userId) {
     return handleError(ErrorCode.NotFound);
   }
@@ -84,7 +85,7 @@ export async function PATCH(
   }
 
   try {
-    const userId = req.headers.get('user_id');
+    const userId = await getAuthenticatedUserId(req);
     if (!userId) {
       return handleError(ErrorCode.NotFound);
     }

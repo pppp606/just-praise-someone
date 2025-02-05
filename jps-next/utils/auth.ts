@@ -1,14 +1,17 @@
 import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { handleError, ErrorCode } from './errorHandler';
 
 export async function getAuthenticatedUserId(
   req: NextRequest
 ): Promise<string> {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: true,
+  });
 
   if (!token || !token.id) {
-    throw handleError(ErrorCode.Unauthorized);
+    throw new Error('Unauthorized');
   }
 
   return token.id;

@@ -13,6 +13,18 @@ services:
     networks:
       - local_network
 
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: local_swagger_ui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./jps-next/docs/api:/usr/share/nginx/html/openapi
+    environment:
+      - URL=/openapi/openapi.yaml
+    networks:
+      - local_network
+
 volumes:
   postgres_data:
 

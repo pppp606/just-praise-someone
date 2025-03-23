@@ -23,9 +23,11 @@
     "jsonwebtoken": "^9.0.2",
     "next": "15.1.2",
     "next-auth": "^4.24.11",
+    "openai": "^4.89.0",
     "prisma": "^6.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "twitter-api-v2": "^1.21.0",
     "uuid": "^11.0.5"
   },
   "devDependencies": {

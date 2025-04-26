@@ -30,6 +30,7 @@ model User {
   givenPraises    Praise[]    @relation("UserGivenPraises") // 自分が送った褒め
   receivedPraises Praise[]  @relation("UserReceivedPraises") // 自分が受け取った褒め
   llmBatchJobs    LlmBatchJob[]
+  notifications   Notification[] // 通知
 
   @@map("users")
 }
@@ -163,4 +164,35 @@ model LlmBatchJob {
 
   @@map("llm_batch_jobs")
   @@unique([provider, jobId])
+}
+
+enum NotificationType {
+  NEW_PRAISE @map("NEW_PRAISE")
+  SYSTEM_ANNOUNCEMENT @map("SYSTEM_ANNOUNCEMENT")
+}
+
+model Notification {
+  id              String           @id @default(uuid())
+  type            NotificationType
+  userId          String
+  isRead          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metadata        NotificationMetadata[]
+
+  @@map("notifications")
+}
+
+model NotificationMetadata {
+  id              String           @id @default(uuid())
+  notificationId  String
+  key             String           // 例: "praiseId", "systemMessageId", "content"など
+  value           String           // 値（JSON文字列として保存）
+
+  notification    Notification     @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, key])
+  @@map("notification_metadata")
 }

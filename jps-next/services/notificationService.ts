@@ -45,20 +45,16 @@ export class NotificationService {
     };
   }
 
-  static async updateReadStatus(id: string, userId: string) {
-    const notification = await this.prisma.findUnique({
-      where: { id, userId },
-    });
-
-    if (!notification) {
-      throw {
-        code: ErrorCode.NotFound,
-      };
+  static async updateReadStatus(userId: string) {
+    try {
+      await this.prisma.updateMany({
+        where: {
+          userId,
+        },
+        data: { isRead: true },
+      });
+    } catch (error) {
+      throw new Error(error as string);
     }
-
-    await this.prisma.update({
-      where: { id },
-      data: { isRead: true },
-    });
   }
 } 

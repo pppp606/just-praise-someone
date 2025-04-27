@@ -1,3 +1,4 @@
+import { NotificationType, PrismaClient } from '@prisma/client';
 import { NotificationService } from '../../services/notificationService';
 import { ErrorCode } from '../../utils/errorHandler';
 
@@ -5,14 +6,14 @@ describe('NotificationService', () => {
   const mockFindMany = jest.fn();
   const mockCount = jest.fn();
   const mockFindUnique = jest.fn();
-  const mockUpdate = jest.fn();
+  const mockUpdateMany = jest.fn();
 
   beforeAll(() => {
     // NotificationService.prismaをモック
     NotificationService.prisma.findMany = mockFindMany;
     NotificationService.prisma.count = mockCount;
     NotificationService.prisma.findUnique = mockFindUnique;
-    NotificationService.prisma.update = mockUpdate;
+    NotificationService.prisma.updateMany = mockUpdateMany;
   });
 
   beforeEach(() => {
@@ -71,36 +72,26 @@ describe('NotificationService', () => {
   });
 
   describe('updateReadStatus', () => {
-    it('通知が存在する場合、正常に既読状態に更新される', async () => {
-      const mockNotification = { id: '1', userId: 'user1', isRead: false };
-      mockFindUnique.mockResolvedValue(mockNotification);
-      mockUpdate.mockResolvedValue({ ...mockNotification, isRead: true });
-
-      await NotificationService.updateReadStatus('1', 'user1');
-
-      expect(mockFindUnique).toHaveBeenCalledWith({
-        where: { id: '1', userId: 'user1' },
-      });
-      expect(mockUpdate).toHaveBeenCalledWith({
-        where: { id: '1' },
+    it('更新が実行される', async () => {
+      await NotificationService.updateReadStatus('test_user_1');
+      expect(mockUpdateMany).toHaveBeenCalledWith({
+        where: { userId: 'test_user_1' },
         data: { isRead: true },
       });
     });
 
-    it('通知が存在しない場合、NotFoundエラーが投げられる', async () => {
-      mockFindUnique.mockResolvedValue(null);
-
-      await expect(NotificationService.updateReadStatus('1', 'user1')).rejects.toEqual({
-        code: ErrorCode.NotFound,
-      });
-    });
-
     it('Prismaのupdateでエラーが発生した場合、例外を投げる', async () => {
-      const mockNotification = { id: '1', userId: 'user1', isRead: false };
-      mockFindUnique.mockResolvedValue(mockNotification);
-      mockUpdate.mockRejectedValue(new Error('DB Error'));
+      const prisma = new PrismaClient();
+      await prisma.notification.create({
+        data: {
+          userId: 'test_user_1',
+          type: NotificationType.NEW_PRAISE,
+          isRead: false,
+        },
+      });
 
-      await expect(NotificationService.updateReadStatus('1', 'user1')).rejects.toThrow('DB Error');
+      mockUpdateMany.mockRejectedValue(new Error('DB Error'));
+      await expect(NotificationService.updateReadStatus('test_user_1')).rejects.toThrow('DB Error');
     });
   });
 }); 

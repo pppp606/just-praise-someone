@@ -44,4 +44,21 @@ export class NotificationService {
       totalPages,
     };
   }
+
+  static async updateReadStatus(id: string, userId: string) {
+    const notification = await this.prisma.findUnique({
+      where: { id, userId },
+    });
+
+    if (!notification) {
+      throw {
+        code: ErrorCode.NotFound,
+      };
+    }
+
+    await this.prisma.update({
+      where: { id },
+      data: { isRead: true },
+    });
+  }
 } 

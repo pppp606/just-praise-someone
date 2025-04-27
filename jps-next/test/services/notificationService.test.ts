@@ -1,13 +1,18 @@
 import { NotificationService } from '../../services/notificationService';
+import { ErrorCode } from '../../utils/errorHandler';
 
 describe('NotificationService', () => {
   const mockFindMany = jest.fn();
   const mockCount = jest.fn();
+  const mockFindUnique = jest.fn();
+  const mockUpdate = jest.fn();
 
   beforeAll(() => {
     // NotificationService.prismaをモック
     NotificationService.prisma.findMany = mockFindMany;
     NotificationService.prisma.count = mockCount;
+    NotificationService.prisma.findUnique = mockFindUnique;
+    NotificationService.prisma.update = mockUpdate;
   });
 
   beforeEach(() => {
@@ -63,5 +68,39 @@ describe('NotificationService', () => {
     mockCount.mockResolvedValue(0);
 
     await expect(NotificationService.getNotifications('user1', 1)).rejects.toThrow('DB Error');
+  });
+
+  describe('updateReadStatus', () => {
+    it('通知が存在する場合、正常に既読状態に更新される', async () => {
+      const mockNotification = { id: '1', userId: 'user1', isRead: false };
+      mockFindUnique.mockResolvedValue(mockNotification);
+      mockUpdate.mockResolvedValue({ ...mockNotification, isRead: true });
+
+      await NotificationService.updateReadStatus('1', 'user1');
+
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: '1', userId: 'user1' },
+      });
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: '1' },
+        data: { isRead: true },
+      });
+    });
+
+    it('通知が存在しない場合、NotFoundエラーが投げられる', async () => {
+      mockFindUnique.mockResolvedValue(null);
+
+      await expect(NotificationService.updateReadStatus('1', 'user1')).rejects.toEqual({
+        code: ErrorCode.NotFound,
+      });
+    });
+
+    it('Prismaのupdateでエラーが発生した場合、例外を投げる', async () => {
+      const mockNotification = { id: '1', userId: 'user1', isRead: false };
+      mockFindUnique.mockResolvedValue(mockNotification);
+      mockUpdate.mockRejectedValue(new Error('DB Error'));
+
+      await expect(NotificationService.updateReadStatus('1', 'user1')).rejects.toThrow('DB Error');
+    });
   });
 }); 

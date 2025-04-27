@@ -104,6 +104,44 @@ components:
         sortOrder:
           type: integer
 
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [new_praise, system_announcement]
+          description: |
+            new_praise - 新しい褒めが届いた場合
+            system_announcement - システムからのお知らせ
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: 通知のメタデータ（キーバリュー形式）
+
+    NotificationList:
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        totalCount:
+          type: integer
+        hasMore:
+          type: boolean
+
 paths:
   /auth/[...nextauth]:
     get:
@@ -364,4 +402,53 @@ paths:
         '404':
           description: ユーザーが見つかりません
         '401':
-          description: 認証エラー 
+          description: 認証エラー
+
+
+  /notifications:
+    get:
+      summary: 通知一覧の取得
+      tags:
+        - Notifications
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 通知一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationList'
+        '401':
+          description: 認証エラー
+
+  /notifications/{id}/read:
+    patch:
+      summary: 通知を既読にする
+      tags:
+        - Notifications
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 更新成功
+        '401':
+          description: 認証エラー
+        '404':
+          description: 通知が見つかりません 

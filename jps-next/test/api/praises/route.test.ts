@@ -1,12 +1,19 @@
 import { testApiHandler } from 'next-test-api-route-handler';
 import * as appHandler from '../../../app/api/praises/route';
 import { PraiseService } from '../../../services/praiseService';
+import { getAuthenticatedUserId } from '../../../utils/auth';
+import { ErrorCode } from '../../../utils/errorHandler';
 
 jest.mock('../../../services/praiseService', () => ({
   PraiseService: {
     getPraisesByReceivedUserId: jest.fn(),
     getPraisesByGivenUserId: jest.fn(),
+    createPraise: jest.fn(),
   },
+}));
+
+jest.mock('../../../utils/auth', () => ({
+  getAuthenticatedUserId: jest.fn(),
 }));
 
 afterEach(() => {
@@ -132,6 +139,119 @@ describe('API Tests - /api/praise', () => {
             'test_user_1',
             2
           );
+        },
+      });
+    });
+  });
+
+  describe('POST', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test('正常なリクエストの場合、createPraiseが正しい引数で呼ばれる', async () => {
+      const mockUserId = 'test_user_1';
+      (getAuthenticatedUserId as jest.Mock).mockResolvedValue(mockUserId);
+      (PraiseService.createPraise as jest.Mock).mockResolvedValue({});
+
+      await testApiHandler({
+        appHandler,
+        test: async ({ fetch }) => {
+          const requestBody = {
+            content: '素晴らしいコードです',
+            receivedUserId: 'test_user_2',
+            skills: ['code_quality'],
+          };
+
+          const response = await fetch({
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          expect(response.status).toBe(201);
+          expect(PraiseService.createPraise).toHaveBeenCalledTimes(1);
+          expect(PraiseService.createPraise).toHaveBeenCalledWith({
+            givenUserId: mockUserId,
+            receivedUserId: requestBody.receivedUserId,
+            content: requestBody.content,
+            skillCodes: requestBody.skills,
+          });
+        },
+      });
+    });
+
+    test('認証されていない場合、createPraiseは呼ばれない', async () => {
+      (getAuthenticatedUserId as jest.Mock).mockResolvedValue(null);
+
+      await testApiHandler({
+        appHandler,
+        test: async ({ fetch }) => {
+          const response = await fetch({
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: '素晴らしいコードです',
+              receivedUserId: 'test_user_2',
+              skills: ['code_quality'],
+            }),
+          });
+
+          expect(response.status).toBe(401);
+          expect(PraiseService.createPraise).not.toHaveBeenCalled();
+        },
+      });
+    });
+
+    test('必須パラメータが不足している場合、createPraiseは呼ばれない', async () => {
+      const mockUserId = 'test_user_1';
+      (getAuthenticatedUserId as jest.Mock).mockResolvedValue(mockUserId);
+
+      await testApiHandler({
+        appHandler,
+        test: async ({ fetch }) => {
+          const response = await fetch({
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: '素晴らしいコードです',
+            }),
+          });
+
+          expect(response.status).toBe(400);
+          expect(PraiseService.createPraise).not.toHaveBeenCalled();
+        },
+      });
+    });
+
+    test('サービスエラーが発生した場合、500を返す', async () => {
+      const mockUserId = 'test_user_1';
+      (getAuthenticatedUserId as jest.Mock).mockResolvedValue(mockUserId);
+      (PraiseService.createPraise as jest.Mock).mockRejectedValue(new Error('Service error'));
+
+      await testApiHandler({
+        appHandler,
+        test: async ({ fetch }) => {
+          const response = await fetch({
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: '素晴らしいコードです',
+              receivedUserId: 'test_user_2',
+              skills: ['code_quality'],
+            }),
+          });
+
+          expect(response.status).toBe(500);
+          expect(PraiseService.createPraise).toHaveBeenCalledTimes(1);
         },
       });
     });

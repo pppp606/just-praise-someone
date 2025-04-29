@@ -248,7 +248,6 @@ paths:
           required: false
           schema:
             type: integer
-            default: 1
       responses:
         '200':
           description: 褒めの一覧
@@ -260,6 +259,43 @@ paths:
                   $ref: '#/components/schemas/Praise'
         '400':
           description: バリデーションエラー
+    post:
+      summary: 新しい褒めの作成
+      tags:
+        - Praises
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+                - receivedUserId
+              properties:
+                content:
+                  type: string
+                  maxLength: 255
+                  description: 褒めの内容
+                receivedUserId:
+                  type: string
+                  format: uuid
+                  description: 褒められるユーザーのID
+                skills:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: 関連するスキルのIDリスト
+      responses:
+        '201':
+          description: 褒めの作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Praise'
 
   /praises/{id}:
     get:

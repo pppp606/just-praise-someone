@@ -1,8 +1,15 @@
 import { testApiHandler } from 'next-test-api-route-handler';
 import * as appHandler from '../../../../app/api/praises/[id]/route';
 import { PrismaClient } from '@prisma/client';
+import { getAuthenticatedUserId } from '../../../../utils/auth';
+
+jest.mock("../../../../utils/auth", () => ({
+  getAuthenticatedUserId: jest.fn(),
+}));
 
 describe('API Tests - /api/praise/${id}', () => {
+  (getAuthenticatedUserId as jest.Mock).mockResolvedValue("test_user_1");
+
   describe('GET', () => {
     test('データが存在しない場合、404エラーを返す', async () => {
       await testApiHandler({
@@ -71,6 +78,10 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'PUT',
+            body: JSON.stringify({
+              content: 'updated message',
+              skillCodes: ['code_quality'],
+            }),
           });
           expect(result.status).toBe(404);
           const body = await result.json();
@@ -79,7 +90,7 @@ describe('API Tests - /api/praise/${id}', () => {
       });
     });
 
-    test('headerにuser-idが存在しない場合、404エラーを返す', async () => {
+    test('user-idが更新対象のデータのgivenUserIdと一致しない場合、404エラーを返す', async () => {
       const prisma = new PrismaClient();
       const skill = await prisma.skill.findFirst({
         where: { code: 'code_quality' },
@@ -105,43 +116,6 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'PUT',
-          });
-          expect(result.status).toBe(404);
-          const body = await result.json();
-          expect(body).toEqual({ error: 'Resource not found' });
-        },
-      });
-    });
-
-    test('headerにuser-idが更新対象のデータのgivenUserIdと一致しない場合、404エラーを返す', async () => {
-      const prisma = new PrismaClient();
-      const skill = await prisma.skill.findFirst({
-        where: { code: 'code_quality' },
-      });
-      if (!skill) {
-        throw new Error('Skill not found');
-      }
-
-      const praise = await prisma.praise.create({
-        data: {
-          content: 'message',
-          receivedUserId: 'test_user_1',
-          skills: {
-            create: [{ skillId: skill.id }],
-          },
-          givenUserId: 'test_user_2',
-        },
-      });
-
-      await testApiHandler({
-        appHandler,
-        paramsPatcher: (params) => ({ id: praise.id }),
-        test: async ({ fetch }) => {
-          const result = await fetch({
-            method: 'PUT',
-            headers: {
-              user_id: 'test_user_3',
-            },
             body: JSON.stringify({
               content: 'updated message',
               skillCodes: ['code_quality'],
@@ -166,11 +140,11 @@ describe('API Tests - /api/praise/${id}', () => {
       const praise = await prisma.praise.create({
         data: {
           content: 'message',
-          receivedUserId: 'test_user_1',
+          receivedUserId: 'test_user_2',
           skills: {
             create: [{ skillId: skill.id }],
           },
-          givenUserId: 'test_user_2',
+          givenUserId: 'test_user_1',
         },
       });
 
@@ -180,9 +154,6 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'PUT',
-            headers: {
-              user_id: 'test_user_2',
-            },
             body: JSON.stringify({
               content: 'updated message',
               skillCodes: ['code_quality'],
@@ -226,7 +197,7 @@ describe('API Tests - /api/praise/${id}', () => {
       });
     });
 
-    test('headerにuser-idが存在しない場合、404エラーを返す', async () => {
+    test('user-idが削除対象のデータのgivenUserIdと一致しない場合、404エラーを返す', async () => {
       const prisma = new PrismaClient();
       const skill = await prisma.skill.findFirst({
         where: { code: 'code_quality' },
@@ -252,43 +223,6 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'DELETE',
-          });
-          expect(result.status).toBe(404);
-          const body = await result.json();
-          expect(body).toEqual({ error: 'Resource not found' });
-        },
-      });
-    });
-
-    test('headerにuser-idが削除対象のデータのgivenUserIdと一致しない場合、404エラーを返す', async () => {
-      const prisma = new PrismaClient();
-      const skill = await prisma.skill.findFirst({
-        where: { code: 'code_quality' },
-      });
-      if (!skill) {
-        throw new Error('Skill not found');
-      }
-
-      const praise = await prisma.praise.create({
-        data: {
-          content: 'message',
-          receivedUserId: 'test_user_1',
-          skills: {
-            create: [{ skillId: skill.id }],
-          },
-          givenUserId: 'test_user_2',
-        },
-      });
-
-      await testApiHandler({
-        appHandler,
-        paramsPatcher: (params) => ({ id: praise.id }),
-        test: async ({ fetch }) => {
-          const result = await fetch({
-            method: 'DELETE',
-            headers: {
-              user_id: 'test_user_1',
-            },
           });
           expect(result.status).toBe(404);
           const body = await result.json();
@@ -309,11 +243,11 @@ describe('API Tests - /api/praise/${id}', () => {
       const praise = await prisma.praise.create({
         data: {
           content: 'message',
-          receivedUserId: 'test_user_1',
+          receivedUserId: 'test_user_2',
           skills: {
             create: [{ skillId: skill.id }],
           },
-          givenUserId: 'test_user_2',
+          givenUserId: 'test_user_1',
         },
       });
 
@@ -323,9 +257,6 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'DELETE',
-            headers: {
-              user_id: 'test_user_2',
-            },
           });
           expect(result.status).toBe(200);
           const body = await result.json();
@@ -348,6 +279,9 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'PATCH',
+            body: JSON.stringify({
+              isApproved: true,
+            }),
           });
           expect(result.status).toBe(404);
           const body = await result.json();
@@ -356,7 +290,7 @@ describe('API Tests - /api/praise/${id}', () => {
       });
     });
 
-    test('headerにuser-idが存在しない場合、404エラーを返す', async () => {
+    test('user-idが更新対象のデータのreceivedUserIdが一致しない場合、404エラーを返す', async () => {
       const prisma = new PrismaClient();
       const skill = await prisma.skill.findFirst({
         where: { code: 'code_quality' },
@@ -368,11 +302,11 @@ describe('API Tests - /api/praise/${id}', () => {
       const praise = await prisma.praise.create({
         data: {
           content: 'message',
-          receivedUserId: 'test_user_1',
+          receivedUserId: 'test_user_2',
           skills: {
             create: [{ skillId: skill.id }],
           },
-          givenUserId: 'test_user_2',
+          givenUserId: 'test_user_1',
         },
       });
 
@@ -382,43 +316,6 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'PATCH',
-          });
-          expect(result.status).toBe(404);
-          const body = await result.json();
-          expect(body).toEqual({ error: 'Resource not found' });
-        },
-      });
-    });
-
-    test('headerにuser-idが更新対象のデータのreceivedUserIdが一致しない場合、404エラーを返す', async () => {
-      const prisma = new PrismaClient();
-      const skill = await prisma.skill.findFirst({
-        where: { code: 'code_quality' },
-      });
-      if (!skill) {
-        throw new Error('Skill not found');
-      }
-
-      const praise = await prisma.praise.create({
-        data: {
-          content: 'message',
-          receivedUserId: 'test_user_1',
-          skills: {
-            create: [{ skillId: skill.id }],
-          },
-          givenUserId: 'test_user_2',
-        },
-      });
-
-      await testApiHandler({
-        appHandler,
-        paramsPatcher: (params) => ({ id: praise.id }),
-        test: async ({ fetch }) => {
-          const result = await fetch({
-            method: 'PATCH',
-            headers: {
-              user_id: 'test_user_3',
-            },
             body: JSON.stringify({
               isApproved: true,
             }),
@@ -456,9 +353,6 @@ describe('API Tests - /api/praise/${id}', () => {
         test: async ({ fetch }) => {
           const result = await fetch({
             method: 'PATCH',
-            headers: {
-              user_id: 'test_user_1',
-            },
             body: JSON.stringify({
               isApproved: true,
             }),

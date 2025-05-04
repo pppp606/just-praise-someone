@@ -31,6 +31,8 @@ model User {
   receivedPraises Praise[]  @relation("UserReceivedPraises") // 自分が受け取った褒め
   llmBatchJobs    LlmBatchJob[]
   notifications   Notification[] // 通知
+  groupUsers      GroupUser[]
+  messages   　　　Message[]    @relation("UserMessages")
 
   @@map("users")
 }
@@ -195,4 +197,40 @@ model NotificationMetadata {
 
   @@unique([notificationId, key])
   @@map("notification_metadata")
+}
+
+model Group {
+  id         String       @id @default(cuid())
+  name       String?
+  isDm       Boolean      @default(false)
+  groupUsers GroupUser[]
+  messages   Message[]
+  createdAt  DateTime     @default(now())
+
+  @@map("groups")
+}
+
+model GroupUser {
+  id       String @id @default(cuid())
+  userId   String
+  groupId  String
+
+  user     User   @relation(fields: [userId], references: [id])
+  group    Group  @relation(fields: [groupId], references: [id])
+  @@unique([groupId, userId])
+
+  @@map("group_users")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+
+  userId    String
+  groupId   String
+  user      User     @relation("UserMessages", fields: [userId], references: [id])
+  group     Group    @relation(fields: [groupId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("messages")
 }

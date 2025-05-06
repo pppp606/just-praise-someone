@@ -214,6 +214,8 @@ model GroupUser {
   id       String @id @default(cuid())
   userId   String
   groupId  String
+  isAdmin   Boolean @default(false)
+  isPending Boolean @default(false)
 
   user     User   @relation(fields: [userId], references: [id])
   group    Group  @relation(fields: [groupId], references: [id])

@@ -142,6 +142,64 @@ components:
         hasMore:
           type: boolean
 
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: cuid
+        name:
+          type: string
+          nullable: true
+        isDm:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastMessageAt:
+          type: string
+          format: date-time
+          description: 最後のメッセージが送信された日時
+        groupUsers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: cuid
+              userId:
+                type: string
+                format: uuid
+              groupId:
+                type: string
+                format: cuid
+              isAdmin:
+                type: boolean
+              isPending:
+                type: boolean
+              user:
+                $ref: '#/components/schemas/User'
+
+    GroupUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: cuid
+        userId:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: cuid
+        isAdmin:
+          type: boolean
+        isPending:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+
 paths:
   /auth/[...nextauth]:
     get:
@@ -487,4 +545,114 @@ paths:
         '401':
           description: 認証エラー
         '404':
-          description: 通知が見つかりません 
+          description: 通知が見つかりません
+
+  /groups:
+    get:
+      summary: グループ一覧の取得
+      description: ユーザーが所属するグループの一覧を取得します
+      parameters:
+        - name: isDm
+          in: query
+          description: DMグループのみを取得する場合はtrueを指定
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: グループ一覧の取得に成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: グループの作成
+      description: 新しいグループを作成します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isDm
+                - userIds
+              properties:
+                name:
+                  type: string
+                  description: グループ名（DMグループの場合は任意）
+                isDm:
+                  type: boolean
+                  description: DMグループかどうか
+                userIds:
+                  type: array
+                  items:
+                    type: string
+                  description: グループに参加させるユーザーIDの配列（DMグループの場合は2人のみ）
+      responses:
+        '201':
+          description: グループの作成に成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /groups/{groupId}:
+    put:
+      summary: グループ名の更新
+      description: グループ名を更新します（管理者のみ可能、DMグループの場合は全員可能）
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: グループID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: 新しいグループ名
+      responses:
+        '200':
+          description: グループ名の更新に成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: 管理者権限がない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: グループが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError' 
